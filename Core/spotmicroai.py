@@ -117,6 +117,23 @@ class Robot:
 
         self.lastLidarTime=0
     
+        self.override_angles = None
+        self.catServo2dogServo = [
+            (0, 0), (0, 0), (0, 0), (0, 0),  # hPan, hTilt, tPan, N/A
+            (0, 0), (1, 0), (3, 0), (2, 0),  # FLS, FRS, BRS, BLS
+            (0, 1), (1, 1), (3, 1), (2, 1),  # FLT, FRT, BRT, BLT
+            (0, 2), (1, 2), (3, 2), (2, 2)]  # FLK, FRK, BRK, BLT
+        self.catDir2dogDir = [
+            1, 1, 1, 1, 
+            1, 1, 1, 1, 
+            -1, -1, 1, 1, 
+            -1, -1, 1, 1]
+        self.catOffset2dogOffset = [
+            0, 0, 0, 0, 
+            0, 0, 0, 0, 
+            0, 0, 0, 0, 
+            90, 90, 90, 90]
+        
     def createEnv(self):
         shift = [0, -0.0, 0]
         meshScale = [0.1, 0.1, 0.1]
@@ -285,6 +302,17 @@ class Robot:
               output[leg][part] = angles[lx][px]*self.dirs[lx][px]*180.0/math.pi
       return output
   
+    def setCatAnglesDegrees(self, angles):
+        self.override_angles = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
+        offset = 16 - len(angles)
+        if offset < 4:
+            offset = 4  # skip head & tail motors
+        for i in range(offset, 16):
+            (leg, part) = self.catServo2dogServo[i]
+            angle = angles[i-offset] * self.catDir2dogDir[i] + self.catOffset2dogOffset[i]
+            self.override_angles[leg][part] = angle * math.pi / 180.0
+        
+        
     def step(self):
 
         if (self.useRealTime):
@@ -308,22 +336,10 @@ class Robot:
         if self.rotateCamera:
             p.resetDebugVisualizerCamera(0.7,self.t*10,-5,bodyPos)
         # Calculate Angles with the input of FeetPos,BodyRotation and BodyPosition
-        angles = self.kin.calcIK(self.Lp, self.rot, self.pos)
-        #angles[0][0] = 0.0201
-        #angles[1][0] = 0.0201
-        #angles[2][0] = 0.0201
-        #angles[3][0] = 0.0201
-        
-        #angles[0][1] = 1
-        #angles[1][1] = 1
-        #angles[2][1] = 1
-        #angles[3][1] = 1
-        
-        #angles[0][2] = 1.944
-        #angles[1][2] = 1.944
-        #angles[2][2] = 1.944
-        #angles[3][2] = 1.944
-        
+        if self.override_angles:
+            angles = self.override_angles
+        else:
+            angles = self.kin.calcIK(self.Lp, self.rot, self.pos)
 
         for lx, leg in enumerate(['front_left', 'front_right', 'rear_left', 'rear_right']):
             for px, part in enumerate(['shoulder', 'leg', 'foot']):
