@@ -19,7 +19,7 @@
   <link name="base_link">
     <visual>
       <geometry>
-        <mesh filename="../Parts/mainbody.stl" scale="0.00154 0.001 0.001"/>
+        <mesh filename="../Parts/mainbody.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
       <origin rpy="0 0 0" xyz="-0.045 -0.060 -0.015"/>
@@ -38,16 +38,16 @@
   <link name="rear_link">
     <visual>
       <geometry>
-        <mesh filename="../Parts/backpart.stl" scale="0.00154 0.001 0.001"/>
+        <mesh filename="../Parts/backpart.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="-0.040 -0.060 -0.0140"/>
+      <origin rpy="0 0 0" xyz="-0.0025 -0.060 -0.0140"/>
       <material name="yellow"/>
     </visual>
     <collision>
       <geometry>
         <box size="0.04 0.11 0.07"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0.21 0 0"/>
+      <origin rpy="0 0 0" xyz="0.1715 0 0"/>
     </collision>
     <inertial>
       <mass value="0.20"/>
@@ -61,16 +61,16 @@
   <link name="front_link">
     <visual>
       <geometry>
-        <mesh filename="../Parts/frontpart.stl" scale="0.00154 0.001 0.001"/>
+        <mesh filename="../Parts/frontpart.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="-0.040 -0.060 -0.0140"/>
+      <origin rpy="0 0 0" xyz="-0.0775 -0.060 -0.0140"/>
       <material name="yellow"/>
     </visual>
     <collision>
       <geometry>
         <box size="0.058 0.11 0.07"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="-0.22 0 0"/>
+      <origin rpy="0 0 0" xyz="-0.1805 0 0"/>
     </collision>
     <inertial>
       <mass value="0.20"/>
@@ -87,14 +87,14 @@
       <geometry>
         <mesh filename="../Parts/lshoulder.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="-0.105 -0.02 -0.01"/> 
+      <origin rpy="0 0 0" xyz="-0.1295 -0.02 -0.01"/> 
       <material name="black"/>
     </visual>
     <collision>
       <geometry>
         <box size="0.044 0.038 0.07"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>  <!-- Actual set in joint -->
     </collision>
     <inertial>
       <mass value="0.10"/>
@@ -177,7 +177,7 @@
     <parent link="base_link"/>
     <child link="front_left_shoulder_link"/>
     <axis xyz="1 0 0"/>
-    <origin rpy="0 0 0" xyz="-0.149 -0.036 0"/>
+    <origin rpy="0 0 0" xyz="-0.1295 -0.036 0"/>
     <limit effort="1000.0" lower="-0.548" upper="0.548" velocity="0.7"/>
     <dynamics damping="0.0" friction="0.5"/>
   </joint>
@@ -212,14 +212,14 @@
       <geometry>
         <mesh filename="../Parts/rshoulder.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="-0.105 -0.09 -0.01"/>
+      <origin rpy="0 0 0" xyz="-0.1295 -0.09 -0.01"/>
       <material name="black"/>
     </visual>
     <collision>
       <geometry>
         <box size="0.044 0.038 0.07"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>  <!-- Actual set in joint -->
     </collision>
     <inertial>
       <mass value="0.10"/>
@@ -302,7 +302,7 @@
     <parent link="base_link"/>
     <child link="front_right_shoulder_link"/>
     <axis xyz="1 0 0"/>
-    <origin rpy="0 0 0" xyz="-0.149 0.036 0"/>
+    <origin rpy="0 0 0" xyz="-0.1295 0.036 0"/>
     <limit effort="1000.0" lower="-0.548" upper="0.548" velocity="0.7"/>
     <dynamics damping="0.0" friction="0.5"/>
   </joint>
@@ -337,14 +337,14 @@
       <geometry>
         <mesh filename="../Parts/lshoulder.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="-0.12 -0.02 -0.01"/>
+      <origin rpy="0 0 0" xyz="-0.1295 -0.02 -0.01"/>
       <material name="black"/>
     </visual>
     <collision>
       <geometry>
         <box size="0.044 0.038 0.07"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>  <!-- Actual set in joint -->
     </collision>
     <inertial>
       <mass value="0.10"/>
@@ -423,11 +423,11 @@
       <inertia ixx="1000" ixy="0" ixz="0" iyy="1000" iyz="0" izz="1000"/>
     </inertial>
   </link>
-  <joint name="rear_left_shoulder" type="revolute"> <!-- dwind: orig left -->
+  <joint name="rear_left_shoulder" type="revolute">
     <parent link="base_link"/>
     <child link="rear_left_shoulder_link"/>
     <axis xyz="1 0 0"/>
-    <origin rpy="0 0 0" xyz="0.149 -0.036 0"/>
+    <origin rpy="0 0 0" xyz="0.1295 -0.036 0"/>
     <limit effort="1000.0" lower="-0.548" upper="0.548" velocity="0.7"/>
     <dynamics damping="0.0" friction="0.5"/>
   </joint>
@@ -435,7 +435,7 @@
     <parent link="rear_right_shoulder_link"/>
     <child link="rear_right_leg_link"/>
     <axis xyz="0 1 0"/>
-    <origin rpy="0 0 3.2" xyz="0 0.052 0"/>
+    <origin rpy="0 0 3.14159" xyz="0 0.052 0"/>
     <limit effort="1000.0" lower="-2.666" upper="1.548" velocity="0.5"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
@@ -462,14 +462,14 @@
       <geometry>
         <mesh filename="../Parts/rshoulder.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="-0.12 -0.09 -0.01"/>
+      <origin rpy="0 0 0" xyz="-0.1295 -0.09 -0.01"/>
       <material name="black"/>
     </visual>
     <collision>
       <geometry>
         <box size="0.044 0.038 0.07"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>  <!-- Actual set in joint -->
     </collision>
     <inertial>
       <mass value="0.10"/>
@@ -552,7 +552,7 @@
     <parent link="base_link"/>
     <child link="rear_right_shoulder_link"/>
     <axis xyz="1 0 0"/>
-    <origin rpy="0 0 0" xyz="0.149 0.036 0"/>
+    <origin rpy="0 0 0" xyz="0.1295 0.036 0"/>
     <limit effort="1000.0" lower="-0.548" upper="0.548" velocity="0.7"/>
     <dynamics damping="0.0" friction="0.5"/>
   </joint>
@@ -560,7 +560,7 @@
     <parent link="rear_left_shoulder_link"/>
     <child link="rear_left_leg_link"/>
     <axis xyz="0 1 0"/>
-    <origin rpy="0 0 3.2" xyz="0 -0.052 0"/>
+    <origin rpy="0 0 3.14159" xyz="0 -0.052 0"/>
     <limit effort="1000.0" lower="-2.666" upper="1.548" velocity="0.5"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>

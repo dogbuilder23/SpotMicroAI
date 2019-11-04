@@ -28,14 +28,14 @@ class Robot:
         self.useRealTime = True
         self.debugLidar=False
         self.rotateCamera=False
-        self.debug=False
+        self.debug=True
         self.fixedTimeStep = 1. / 550
         self.numSolverIterations = 200
         self.useFixedBase =useFixedBase
         self.useStairs=useStairs
 
         self.init_oritentation=p.getQuaternionFromEuler([0, 0, 90.0])
-        self.init_position=[0, 0, 0.3]
+        self.init_position=[-0.3, 0, 0.1]
 
         self.reflection=False
         self.state=RobotState.OFF
@@ -57,6 +57,7 @@ class Robot:
         self.t=0
         if self.reflection:
             p.configureDebugVisualizer(p.COV_ENABLE_PLANAR_reflection, 1)
+        #p.configureDebugVisualizer(p.COV_ENABLE_KEYBOARD_SHORTCUTS, 1)
         p.configureDebugVisualizer(p.COV_ENABLE_TINY_RENDERER, 1)
         self.IDkp = p.addUserDebugParameter("Kp", 0, 0.05, self.kp) # 0.05
         self.IDkd = p.addUserDebugParameter("Kd", 0, 1, self.kd) # 0.5
@@ -87,14 +88,19 @@ class Robot:
                     self.rayIds.append(p.addUserDebugLine(self.rayFrom[i], self.rayTo[i], self.rayMissColor,parentObjectUniqueId=self.quadruped, parentLinkIndex=self.jointNameToId["base_lidar"]))
                 else:
                     self.rayIds.append(-1) 
-        self.L=140
+        self.L=215
         self.W=75+5+40
 
         self.dirs = [[-1, 1, 1], [1, 1, 1], [-1, 1, 1], [1, 1, 1]]
         self.roll=0
 
-        self.Lp = np.array([[120, -100, self.W/2, 1], [120, -100, -self.W/2, 1],
-        [-50, -100, self.W/2, 1], [-50, -100, -self.W/2, 1]])
+        # Foot position array.
+        # Doug: TODO: Understand these coords, and adjust based on body length.
+        self.Lp = np.array([
+            [107.5, -100, self.W/2, 1],   #120
+            [107.5, -100, -self.W/2, 1],  #120
+            [-22, -100, self.W/2, 1],   #-50
+            [-22, -100, -self.W/2, 1]]) #-50
 
         
         self.kin = Kinematic()
@@ -172,7 +178,9 @@ class Robot:
 
         for i in range(nJoints):
             jointInfo = p.getJointInfo(quadruped, i)
-            jointNameToId[jointInfo[1].decode('UTF-8')] = jointInfo[0]
+            name = jointInfo[1].decode('UTF-8')
+            jointNameToId[name] = jointInfo[0]
+            print('Joint %d is named %s.' % (jointInfo[0], name))
         return jointNameToId
 
     
@@ -184,15 +192,25 @@ class Robot:
         text2="Roll/Pitch: {:.1f} / {:.1f}".format(math.degrees(bodyEuler[0]),math.degrees(bodyEuler[1]))
         text3="Vl: {:.1f} / {:.1f} / {:.1f} Va: {:.1f} / {:.1f} / {:.1f}".format(linearVel[0],linearVel[1],linearVel[2],
             angularVel[0],angularVel[1],angularVel[2])
+ 
+          
         x,y=bodyPos[0],bodyPos[1]
         newDebugInfo=[
         p.addUserDebugLine([x, y, 0], [x, y, 1], [0,1,0]),
-        p.addUserDebugText(text, [x+0.03, y, 0.6], textColorRGB=[1, 1, 1], textSize=1.0),
-        p.addUserDebugText(text2, [x+0.03, y, 0.5], textColorRGB=[1, 1, 1], textSize=1.0),
-        p.addUserDebugText(text3, [x+0.03, y, 0.4], textColorRGB=[1, 1, 1], textSize=1.0)]
+        #p.addUserDebugText(text, [x+0.03, y, 0.7], textColorRGB=[1, 1, 1], textSize=1.0),
+        #p.addUserDebugText(text2, [x+0.03, y, 0.6], textColorRGB=[1, 1, 1], textSize=1.0),
+        #p.addUserDebugText(text3, [x+0.03, y, 0.5], textColorRGB=[1, 1, 1], textSize=1.0),
         p.addUserDebugLine([-0.3, 0, 0], [0.3, 0, 0], [0,1,0], parentObjectUniqueId=self.quadruped, parentLinkIndex=1 ),
-        p.addUserDebugLine([0, -0.2, 0], [0, 0.2, 0], [0,1,0], parentObjectUniqueId=self.quadruped, parentLinkIndex=1 ),
+        p.addUserDebugLine([0, -0.2, 0], [0, 0.2, 0], [0,1,0], parentObjectUniqueId=self.quadruped, parentLinkIndex=1 )]
 
+        angleInfo = self.getAngleInfo()
+        z = 0.5
+        zStep = -0.05
+        for leg in ['FL', 'BL', 'FR', 'BR']:
+          text = '%s:  S:%5.3f  T:%5.3f  K:%5.3f' % (leg, angleInfo[leg]['S'], angleInfo[leg]['T'], angleInfo[leg]['K'])
+          newDebugInfo.append(p.addUserDebugText(text, [x+0.03, y, z], textColorRGB=[1, 1, 1], textSize=1.0))
+          z = z + zStep
+      
         if len(self.oldDebugInfo)>0:
             for x in self.oldDebugInfo:
                 p.removeUserDebugItem(x)
@@ -258,6 +276,15 @@ class Robot:
         linearVel, angularVel = p.getBaseVelocity(self.quadruped)
         return bodyOrn,linearVel,angularVel
 
+    def getAngleInfo(self):
+      angles = self.kin.calcIK(self.Lp, self.rot, self.pos)
+      output = {}
+      for lx, leg in enumerate(['FL', 'FR', 'BL', 'BR']):
+          output[leg] = {}
+          for px, part in enumerate(['S', 'T', 'K']):
+              output[leg][part] = angles[lx][px]*self.dirs[lx][px]
+      return output
+  
     def step(self):
 
         if (self.useRealTime):
@@ -282,6 +309,21 @@ class Robot:
             p.resetDebugVisualizerCamera(0.7,self.t*10,-5,bodyPos)
         # Calculate Angles with the input of FeetPos,BodyRotation and BodyPosition
         angles = self.kin.calcIK(self.Lp, self.rot, self.pos)
+        #angles[0][0] = 0.0201
+        #angles[1][0] = 0.0201
+        #angles[2][0] = 0.0201
+        #angles[3][0] = 0.0201
+        
+        #angles[0][1] = 1
+        #angles[1][1] = 1
+        #angles[2][1] = 1
+        #angles[3][1] = 1
+        
+        #angles[0][2] = 1.944
+        #angles[1][2] = 1.944
+        #angles[2][2] = 1.944
+        #angles[3][2] = 1.944
+        
 
         for lx, leg in enumerate(['front_left', 'front_right', 'rear_left', 'rear_right']):
             for px, part in enumerate(['shoulder', 'leg', 'foot']):

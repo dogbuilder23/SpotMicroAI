@@ -195,7 +195,7 @@
     <link name="${name}">
       <visual>
         <geometry>
-        <mesh filename="../STL/files/foot.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="../urdf/stl/foot.stl" scale="0.001 0.001 0.001"/>
         </geometry>
         <origin rpy="0 -0.40010 0" xyz="0 -0.01 0"/>
         <material name="grey"/>
@@ -261,7 +261,7 @@
    <link name="lidar_link">
     <visual>
       <geometry>
-        <mesh filename="../STL/lidar/rplidar_main.STL" scale="0.001 0.001 0.001"/>
+        <mesh filename="../urdf/stl/rplidar_main.STL" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/> 
       <origin rpy="1.57075 0 0" xyz="${-lidar_length/2-0.015} ${lidar_width/2} 0"/>
