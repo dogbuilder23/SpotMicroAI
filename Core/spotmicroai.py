@@ -207,7 +207,7 @@ class Robot:
         z = 0.5
         zStep = -0.05
         for leg in ['FL', 'BL', 'FR', 'BR']:
-          text = '%s:  S:%5.3f  T:%5.3f  K:%5.3f' % (leg, angleInfo[leg]['S'], angleInfo[leg]['T'], angleInfo[leg]['K'])
+          text = '%s:  S:%7.1f  T:%7.1f  K:%7.1f' % (leg, angleInfo[leg]['S'], angleInfo[leg]['T'], angleInfo[leg]['K'])
           newDebugInfo.append(p.addUserDebugText(text, [x+0.03, y, z], textColorRGB=[1, 1, 1], textSize=1.0))
           z = z + zStep
       
@@ -282,7 +282,7 @@ class Robot:
       for lx, leg in enumerate(['FL', 'FR', 'BL', 'BR']):
           output[leg] = {}
           for px, part in enumerate(['S', 'T', 'K']):
-              output[leg][part] = angles[lx][px]*self.dirs[lx][px]
+              output[leg][part] = angles[lx][px]*self.dirs[lx][px]*180.0/math.pi
       return output
   
     def step(self):
