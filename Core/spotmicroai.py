@@ -205,10 +205,10 @@ class Robot:
         # TODO: use replacementId instead of deleting the old views. seems to have memleak issues?
         if not self.debug:
             return
-        text="Distance: {:.1f}m".format(math.sqrt(bodyPos[0]**2+bodyPos[1]**2))
-        text2="Roll/Pitch: {:.1f} / {:.1f}".format(math.degrees(bodyEuler[0]),math.degrees(bodyEuler[1]))
-        text3="Vl: {:.1f} / {:.1f} / {:.1f} Va: {:.1f} / {:.1f} / {:.1f}".format(linearVel[0],linearVel[1],linearVel[2],
-            angularVel[0],angularVel[1],angularVel[2])
+        #text="Distance: {:.1f}m".format(math.sqrt(bodyPos[0]**2+bodyPos[1]**2))
+        #text2="Roll/Pitch: {:.1f} / {:.1f}".format(math.degrees(bodyEuler[0]),math.degrees(bodyEuler[1]))
+        #text3="Vl: {:.1f} / {:.1f} / {:.1f} Va: {:.1f} / {:.1f} / {:.1f}".format(linearVel[0],linearVel[1],linearVel[2],
+        #    angularVel[0],angularVel[1],angularVel[2])
  
           
         x,y=bodyPos[0],bodyPos[1]
@@ -220,13 +220,14 @@ class Robot:
         p.addUserDebugLine([-0.3, 0, 0], [0.3, 0, 0], [0,1,0], parentObjectUniqueId=self.quadruped, parentLinkIndex=1 ),
         p.addUserDebugLine([0, -0.2, 0], [0, 0.2, 0], [0,1,0], parentObjectUniqueId=self.quadruped, parentLinkIndex=1 )]
 
-        angleInfo = self.getAngleInfo()
-        z = 0.5
-        zStep = -0.05
-        for leg in ['FL', 'BL', 'FR', 'BR']:
-          text = '%s:  S:%7.1f  T:%7.1f  K:%7.1f' % (leg, angleInfo[leg]['S'], angleInfo[leg]['T'], angleInfo[leg]['K'])
-          newDebugInfo.append(p.addUserDebugText(text, [x+0.03, y, z], textColorRGB=[1, 1, 1], textSize=1.0))
-          z = z + zStep
+        if not self.override_angles:
+            angleInfo = self.getAngleInfo()
+            z = 0.5
+            zStep = -0.05
+            for leg in ['FL', 'BL', 'FR', 'BR']:
+              text = '%s:  S:%7.1f  T:%7.1f  K:%7.1f' % (leg, angleInfo[leg]['S'], angleInfo[leg]['T'], angleInfo[leg]['K'])
+              newDebugInfo.append(p.addUserDebugText(text, [x+0.03, y, z], textColorRGB=[1, 1, 1], textSize=1.0))
+              z = z + zStep
       
         if len(self.oldDebugInfo)>0:
             for x in self.oldDebugInfo:
