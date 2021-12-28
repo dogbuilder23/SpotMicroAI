@@ -20,7 +20,7 @@ class RobotState(Enum):
 
 class Robot:
 
-    def __init__(self,useFixedBase=False,useStairs=True,resetFunc=None):      
+    def __init__(self,useFixedBase=False,useStairs=True,resetFunc=None):
 
         # Simulation Configuration
         self.useMaximalCoordinates = False
@@ -28,9 +28,9 @@ class Robot:
         self.useRealTime = True
         self.debugLidar=False
         self.rotateCamera=False
-        self.debug=True
+        self.debug=False
         self.fixedTimeStep = 1. / 550
-        self.numSolverIterations = 200
+        self.numSolverIterations = 100 #200
         self.useFixedBase =useFixedBase
         self.useStairs=useStairs
 
@@ -69,25 +69,7 @@ class Robot:
         self.createEnv()
         self.changeDynamics(self.quadruped)
         self.jointNameToId = self.getJointNames(self.quadruped)
-        replaceLines=True
-        self.numRays=360
-        self.rayFrom=[]
-        self.rayTo=[]
-        self.rayIds=[]
-        self.rayHitColor = [1,0,0]
-        self.rayMissColor = [0,1,0]
-        rayLen = 12
-        rayStartLen=0.12
-        for i in range (self.numRays):
-            #rayFrom.append([0,0,0])
-            h=0.045
-            self.rayFrom.append([rayStartLen*math.sin(math.pi*2*float(i)/self.numRays), rayStartLen*math.cos(math.pi*2*float(i)/self.numRays),h])
-            self.rayTo.append([rayLen*math.sin(math.pi*2*float(i)/self.numRays), rayLen*math.cos(math.pi*2*float(i)/self.numRays),h])
-            if self.debugLidar:
-                if (replaceLines):
-                    self.rayIds.append(p.addUserDebugLine(self.rayFrom[i], self.rayTo[i], self.rayMissColor,parentObjectUniqueId=self.quadruped, parentLinkIndex=self.jointNameToId["base_lidar"]))
-                else:
-                    self.rayIds.append(-1) 
+
         self.L=215
         self.W=75+5+40
 
@@ -95,14 +77,14 @@ class Robot:
         self.roll=0
 
         # Foot position array.
-        # Doug: TODO: Understand these coords, and adjust based on body length.
+        # TODO(dwind): Understand why x-coords diff from front to back.
         self.Lp = np.array([
-            [107.5, -100, self.W/2, 1],   #120
-            [107.5, -100, -self.W/2, 1],  #120
-            [-22, -100, self.W/2, 1],   #-50
-            [-22, -100, -self.W/2, 1]]) #-50
+            [107.5, -100, self.W/2, 1],   #120  # front right toe?
+            [107.5, -100, -self.W/2, 1],  #120  # front left toe?
+            [-22, -100, self.W/2, 1],   #-50    # back right toe?
+            [-22, -100, -self.W/2, 1]]) #-50    # back left toe?
 
-        
+
         self.kin = Kinematic()
         p.setPhysicsEngineParameter(numSolverIterations=self.numSolverIterations)
         #p.setTimeStep(self.fixedTimeStep)
@@ -116,24 +98,24 @@ class Robot:
         self.projection_matrix = p.computeProjectionMatrixFOV(fov, aspect, nearplane, farplane)
 
         self.lastLidarTime=0
-    
+
         self.override_angles = None
         self.catServo2dogServo = [
             (0, 0), (0, 0), (0, 0), (0, 0),  # hPan, hTilt, tPan, N/A
             (0, 0), (1, 0), (3, 0), (2, 0),  # FLS, FRS, BRS, BLS
             (0, 1), (1, 1), (3, 1), (2, 1),  # FLT, FRT, BRT, BLT
-            (0, 2), (1, 2), (3, 2), (2, 2)]  # FLK, FRK, BRK, BLT
+            (0, 2), (1, 2), (3, 2), (2, 2)]  # FLK, FRK, BRK, BLK
         self.catDir2dogDir = [
-            1, 1, 1, 1, 
-            1, 1, 1, 1, 
-            -1, -1, 1, 1, 
+            1, 1, 1, 1,
+            1, 1, 1, 1,
+            -1, -1, 1, 1,
             -1, -1, 1, 1]
         self.catOffset2dogOffset = [
-            0, 0, 0, 0, 
-            0, 0, 0, 0, 
-            0, 0, 0, 0, 
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
             90, 90, 90, 90]
-        
+
     def createEnv(self):
         shift = [0, -0.0, 0]
         meshScale = [0.1, 0.1, 0.1]
@@ -180,7 +162,7 @@ class Robot:
                             flags=flags) #p.URDF_USE_IMPLICIT_CYLINDER)
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
         p.changeDynamics(quadruped, -1, lateralFriction=0.8)
-       
+
         return quadruped
 
     def changeDynamics(self,quadruped):
@@ -200,8 +182,8 @@ class Robot:
             print('Joint %d is named %s.' % (jointInfo[0], name))
         return jointNameToId
 
-    
-    def addInfoText(self,bodyPos,bodyEuler,linearVel,angularVel):
+
+    def addInfoText(self,bodyPos): #bodyEuler,linearVel,angularVel
         # TODO: use replacementId instead of deleting the old views. seems to have memleak issues?
         if not self.debug:
             return
@@ -209,8 +191,8 @@ class Robot:
         #text2="Roll/Pitch: {:.1f} / {:.1f}".format(math.degrees(bodyEuler[0]),math.degrees(bodyEuler[1]))
         #text3="Vl: {:.1f} / {:.1f} / {:.1f} Va: {:.1f} / {:.1f} / {:.1f}".format(linearVel[0],linearVel[1],linearVel[2],
         #    angularVel[0],angularVel[1],angularVel[2])
- 
-          
+
+
         x,y=bodyPos[0],bodyPos[1]
         newDebugInfo=[
         p.addUserDebugLine([x, y, 0], [x, y, 1], [0,1,0]),
@@ -228,7 +210,7 @@ class Robot:
               text = '%s:  S:%7.1f  T:%7.1f  K:%7.1f' % (leg, angleInfo[leg]['S'], angleInfo[leg]['T'], angleInfo[leg]['K'])
               newDebugInfo.append(p.addUserDebugText(text, [x+0.03, y, z], textColorRGB=[1, 1, 1], textSize=1.0))
               z = z + zStep
-      
+
         if len(self.oldDebugInfo)>0:
             for x in self.oldDebugInfo:
                 p.removeUserDebugItem(x)
@@ -262,7 +244,7 @@ class Robot:
         self.ref_time=time.time()
         if len(self.oldDebugInfo)>0:
             for x in self.oldDebugInfo:
-                p.removeUserDebugItem(x)        
+                p.removeUserDebugItem(x)
         p.resetBasePositionAndOrientation(self.quadruped, self.init_position,[0,0,0,1])
         p.resetBaseVelocity(self.quadruped, [0, 0, 0], [0, 0, 0])
         if(self.resetFunc):
@@ -284,7 +266,7 @@ class Robot:
 
     def feetPosition(self,Lp):
         self.Lp=Lp
-  
+
     def getPos(self):
         bodyPos,_=p.getBasePositionAndOrientation(self.quadruped)
         return bodyPos
@@ -302,7 +284,7 @@ class Robot:
           for px, part in enumerate(['S', 'T', 'K']):
               output[leg][part] = angles[lx][px]*self.dirs[lx][px]*180.0/math.pi
       return output
-  
+
     def setCatAnglesDegrees(self, angles):
         self.override_angles = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
         offset = 16 - len(angles)
@@ -312,8 +294,8 @@ class Robot:
             (leg, part) = self.catServo2dogServo[i]
             angle = angles[i-offset] * self.catDir2dogDir[i] + self.catOffset2dogOffset[i]
             self.override_angles[leg][part] = angle * math.pi / 180.0
-        
-        
+
+
     def step(self):
 
         if (self.useRealTime):
@@ -323,17 +305,17 @@ class Robot:
 
         quadruped=self.quadruped
         bodyPos, bodyOrn = p.getBasePositionAndOrientation(quadruped)
-        linearVel, angularVel = p.getBaseVelocity(quadruped)
-        bodyEuler=p.getEulerFromQuaternion(bodyOrn)
+        #linearVel, angularVel = p.getBaseVelocity(quadruped)
+        #bodyEuler=p.getEulerFromQuaternion(bodyOrn)
         kp=p.readUserDebugParameter(self.IDkp)
         kd=p.readUserDebugParameter(self.IDkd)
         maxForce=p.readUserDebugParameter(self.IDmaxForce)
 
-        self.handleCamera(bodyPos, bodyOrn)
-        self.addInfoText(bodyPos,bodyEuler,linearVel,angularVel)
+        #self.handleCamera(bodyPos, bodyOrn)
+        self.addInfoText(bodyPos)
 
-        if self.checkSimulationReset(bodyOrn):
-            return False
+        #if self.checkSimulationReset(bodyOrn):
+        #    return False
         if self.rotateCamera:
             p.resetDebugVisualizerCamera(0.7,self.t*10,-5,bodyPos)
         # Calculate Angles with the input of FeetPos,BodyRotation and BodyPosition
@@ -351,27 +333,7 @@ class Robot:
                                         targetPosition=angles[lx][px]*self.dirs[lx][px],
                                         positionGain=kp,
                                         velocityGain=kd,
-                                        force=maxForce)  
-        
-        nowLidarTime = time.time()
-        if (nowLidarTime-self.lastLidarTime>.2):
-            numThreads=0
-            results = p.rayTestBatch(self.rayFrom,self.rayTo,numThreads, parentObjectUniqueId=quadruped, parentLinkIndex=0)
-            for i in range (self.numRays):
-                hitObjectUid=results[i][0]
-                hitFraction = results[i][2]
-                hitPosition = results[i][3]
-                if (hitFraction==1.):
-                    if self.debugLidar:
-                        p.addUserDebugLine(self.rayFrom[i],self.rayTo[i], self.rayMissColor,replaceItemUniqueId=self.rayIds[i],parentObjectUniqueId=quadruped, parentLinkIndex=0)
-                else:
-                    localHitTo = [self.rayFrom[i][0]+hitFraction*(self.rayTo[i][0]-self.rayFrom[i][0]),
-                                                self.rayFrom[i][1]+hitFraction*(self.rayTo[i][1]-self.rayFrom[i][1]),
-                                                self.rayFrom[i][2]+hitFraction*(self.rayTo[i][2]-self.rayFrom[i][2])]
-                    dis=math.sqrt(localHitTo[0]**2+localHitTo[1]**2+localHitTo[2]**2)
-                    if self.debugLidar:
-                        p.addUserDebugLine(self.rayFrom[i],localHitTo, self.rayHitColor,replaceItemUniqueId=self.rayIds[i],parentObjectUniqueId=quadruped, parentLinkIndex=0)
-            self.lastLidarTime = nowLidarTime                                        
+                                        force=maxForce)
 
 
         if (self.useRealTime == False):
