@@ -14,7 +14,7 @@ from inputs import devices, get_gamepad
 import spotmicroai
 from kinematicMotion import KinematicMotion,TrottingGait
 #from environment import environment
-from catGaits import CatWalk # CatLY #CatBD #
+import catGaits
 
 rtime=time.time()
 #env=environment()
@@ -45,7 +45,9 @@ Lp = np.array([[iXf, -100,spurWidth, 1], [iXf, -100, -spurWidth, 1],
 
 resetPose()
 
-catGait = CatWalk()
+catGait = catGaits.CatWalk() #CatWalk CatLY CatBD CatBK CatCR CatTR
+
+time.sleep(5)
 
 while True:
 
@@ -55,7 +57,7 @@ while True:
     #distance=math.sqrt(bodyPos[0]**2+bodyPos[1]**2)
     #if distance>500:
     #    robot.resetBody()
-   
+
     #ir=xr/(math.pi/180)
     d=time.time()-rtime
     #height = p.readUserDebugParameter(IDheight)
@@ -64,11 +66,12 @@ while True:
     if d>3:
         robot.setCatAnglesDegrees(catGait.getAngles(d-3))
     else:
-        robot.feetPosition(Lp)
+        robot.setCatAnglesDegrees(catGait.getAngles(0))
+        #robot.feetPosition(Lp)
 
     #roll=0
     #robot.bodyRotation((roll,math.pi/180*((joy_x)-128)/3,-(1/256*joy_y-0.5)))
     #bodyX=50+yr*10
     #robot.bodyPosition((bodyX, 40+height, -ir))
     robot.step()
-    time.sleep(0.05)
+    time.sleep(0.02)

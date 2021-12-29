@@ -27,15 +27,17 @@ class Robot:
         self.resetFunc=resetFunc
         self.useRealTime = True
         self.debugLidar=False
+        self.trackCamera=True
         self.rotateCamera=False
         self.debug=False
         self.fixedTimeStep = 1. / 550
         self.numSolverIterations = 100 #200
         self.useFixedBase =useFixedBase
         self.useStairs=useStairs
+        self.useBlocks = True
 
         self.init_oritentation=p.getQuaternionFromEuler([0, 0, 90.0])
-        self.init_position=[-0.3, 0, 0.1]
+        self.init_position=[0, 0, 0]  # [-0.3, 0, 0.1]
 
         self.reflection=False
         self.state=RobotState.OFF
@@ -117,6 +119,8 @@ class Robot:
             90, 90, 90, 90]
 
     def createEnv(self):
+        if not self.useBlocks:
+            return
         shift = [0, -0.0, 0]
         meshScale = [0.1, 0.1, 0.1]
         visualShapeId = p.createVisualShape(shapeType=p.GEOM_BOX,
@@ -318,6 +322,8 @@ class Robot:
         #    return False
         if self.rotateCamera:
             p.resetDebugVisualizerCamera(0.7,self.t*10,-5,bodyPos)
+        elif self.trackCamera:
+            p.resetDebugVisualizerCamera(0.7,-60,-5,bodyPos)
         # Calculate Angles with the input of FeetPos,BodyRotation and BodyPosition
         if self.override_angles:
             angles = self.override_angles
