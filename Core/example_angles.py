@@ -16,11 +16,16 @@ from kinematicMotion import KinematicMotion,TrottingGait
 #from environment import environment
 import catGaits
 
+from threaded_keyboard import ThreadedKeyboard
+
 rtime=time.time()
 #env=environment()
 def reset():
     global rtime
     rtime=time.time()
+
+kb = ThreadedKeyboard()
+kb.start()
 
 robot=spotmicroai.Robot(False,False,reset)
 
@@ -47,7 +52,7 @@ resetPose()
 
 catGait = catGaits.CatWalk() #CatWalk CatLY CatBD CatBK CatCR CatTR
 
-time.sleep(5)
+# time.sleep(5)   # helpful when recording the screen
 
 while True:
 
@@ -74,4 +79,50 @@ while True:
     #bodyX=50+yr*10
     #robot.bodyPosition((bodyX, 40+height, -ir))
     robot.step()
-    time.sleep(0.02)
+    time.sleep(catGait.sleepSecs())
+
+    key_pressed = kb.read()
+    #print(f'Read key={key_pressed}.')
+    if key_pressed == 'a':
+        catGait = catGaits.CatWalkLeft()
+    elif key_pressed == 'b':
+        catGait = catGaits.CatBound()
+    elif key_pressed == 'c':
+        catGait = catGaits.CatCrawl()
+    elif key_pressed == 'd':
+        catGait = catGaits.CatWalkRight()
+    elif key_pressed == 'e':
+        angle = robot.getCameraAngle()
+        robot.setCameraAngle(angle - 10)
+    elif key_pressed == 'f':
+        robot.fixForceAndGains()
+    elif key_pressed == 'h':
+        catGait = catGaits.CatStretch()
+    elif key_pressed == 'm':
+        catGait = catGaits.CatMarch()
+    elif key_pressed == 'n':
+        catGait = catGaits.CatSleep()
+    elif key_pressed == 'o':
+        catGait = catGaits.CatOurSit()
+    elif key_pressed == 'p':
+        catGait = catGaits.CatPushUp()
+    elif key_pressed == 'q':
+        angle = robot.getCameraAngle()
+        robot.setCameraAngle(angle + 10)
+    elif key_pressed == 'r':
+        robot.resetBody()
+        catGait = catGaits.CatBalance()
+    elif key_pressed == 's':
+        catGait = catGaits.CatBalance()
+    elif key_pressed == 't':
+        catGait = catGaits.CatTrot()
+    elif key_pressed == 'v':
+        catGait = catGaits.CatSit()
+    elif key_pressed == 'w':
+        catGait = catGaits.CatWalk()
+    elif key_pressed == 'x':
+        catGait = catGaits.CatBack()
+    elif key_pressed == 'z':
+        catGait = catGaits.CatZero()
+    elif key_pressed == '?':
+        catGait = catGaits.DadTwist()

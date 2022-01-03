@@ -28,15 +28,17 @@ class Robot:
         self.useRealTime = True
         self.debugLidar=False
         self.trackCamera=True
+        self.camera_angle = 0
         self.rotateCamera=False
         self.debug=False
+        self.fixedGains = False
         self.fixedTimeStep = 1. / 550
         self.numSolverIterations = 100 #200
         self.useFixedBase =useFixedBase
         self.useStairs=useStairs
         self.useBlocks = True
 
-        self.init_oritentation=p.getQuaternionFromEuler([0, 0, 90.0])
+        self.init_oritentation=p.getQuaternionFromEuler([0, 0, 0]) # [0, 0, 90.0]
         self.init_position=[0, 0, 0]  # [-0.3, 0, 0.1]
 
         self.reflection=False
@@ -299,6 +301,21 @@ class Robot:
             angle = angles[i-offset] * self.catDir2dogDir[i] + self.catOffset2dogOffset[i]
             self.override_angles[leg][part] = angle * math.pi / 180.0
 
+    def getCameraAngle(self):
+        return self.camera_angle
+
+    def setCameraAngle(self, angle):
+        self.camera_angle = angle
+
+    def fixForceAndGains(self):
+        kp=p.readUserDebugParameter(self.IDkp)
+        kd=p.readUserDebugParameter(self.IDkd)
+        maxForce=p.readUserDebugParameter(self.IDmaxForce)
+        self.kp = kp
+        self.kd = kd
+        self.maxForce = maxForce
+        self.fixedGains = True
+        print('Using fixed maxForce & Gains.')
 
     def step(self):
 
@@ -311,9 +328,13 @@ class Robot:
         bodyPos, bodyOrn = p.getBasePositionAndOrientation(quadruped)
         #linearVel, angularVel = p.getBaseVelocity(quadruped)
         #bodyEuler=p.getEulerFromQuaternion(bodyOrn)
-        kp=p.readUserDebugParameter(self.IDkp)
-        kd=p.readUserDebugParameter(self.IDkd)
-        maxForce=p.readUserDebugParameter(self.IDmaxForce)
+        kp = self.kp
+        kd = self.kd
+        maxForce = self.maxForce
+        if not self.fixedGains:
+            kp=p.readUserDebugParameter(self.IDkp)
+            kd=p.readUserDebugParameter(self.IDkd)
+            maxForce=p.readUserDebugParameter(self.IDmaxForce)
 
         #self.handleCamera(bodyPos, bodyOrn)
         self.addInfoText(bodyPos)
@@ -323,7 +344,7 @@ class Robot:
         if self.rotateCamera:
             p.resetDebugVisualizerCamera(0.7,self.t*10,-5,bodyPos)
         elif self.trackCamera:
-            p.resetDebugVisualizerCamera(0.7,-60,-5,bodyPos)
+            p.resetDebugVisualizerCamera(0.7, self.camera_angle, -5, bodyPos)
         # Calculate Angles with the input of FeetPos,BodyRotation and BodyPosition
         if self.override_angles:
             angles = self.override_angles
