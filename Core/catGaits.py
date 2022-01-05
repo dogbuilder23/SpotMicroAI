@@ -1,27 +1,125 @@
 class CatGait:
-    def __init__(self):
+    def __init__(self, current_time):
         self.servos = 8
         self.frame_incr = 1
         self.frame = -1 * self.frame_incr
+        self.fixed_seconds_per_frame = 0.04
         self.angles = []
+        self.frame_start_time = current_time
+        self.frame_start_angles = None
+        self.first_step = True
 
-    def getAngles(self, rtime):
-        frames = int(len(self.angles) / self.servos)
-        self.frame = int((self.frame + self.frame_incr) % frames)
-        #print('CatWalk.getAngles() frame=%3.3f\n' % self.frame)
-        start = self.frame * self.servos
-        end = (self.frame+1) * self.servos
-        #print('CatWalk.getAngles() start=%d.  end=%d.\n' % (start, end))
-        return self.angles[start:end]
+    def getNumServos(self):
+        return self.servos
+
+    # TODO(dwind): Remove this. Make sleep time decisions outside of Gaits.
+    def sleepSecs(self):
+        return self.fixed_seconds_per_frame
+
+    # Remove this, if no longer waiting to begin the simulation.
+    def adjustStartTime(self, current_time):
+        self.frame_start_time = current_time
+
+    def getAngles(self, current_time, current_angles):
+        values_per_frame = self.servos
+        if self.fixed_seconds_per_frame is None:
+            values_per_frame = values_per_frame + 1  # +1 for per-frame time
+        frames = int(len(self.angles) / values_per_frame)
+        next_frame = int((self.frame + self.frame_incr) % frames)
+        next_frame_start_idx = next_frame * values_per_frame
+        next_frame_end_idx = next_frame_start_idx + values_per_frame
+
+        # Determine the deadline to reach the target angles.
+        next_frame_end_time = self.fixed_seconds_per_frame
+        if self.fixed_seconds_per_frame is None:
+            next_frame_end_idx = next_frame_end_idx - 1
+            next_frame_end_time = self.angles[next_frame_end_idx]
+
+        print(f's={self.frame_start_time:.3f}. sa={self.frame_start_angles}. n={next_frame}. t={next_frame_end_time}.')
+
+        # Cache the starting angles, if we're transitioning into new gait.
+        if self.first_step:
+            self.frame_state_angles = current_angles
+            self.first_step = False
+
+        # If we're at or past the deadline, move to the target angles now.
+        if current_time >= next_frame_end_time + self.frame_start_time:
+            self.frame = next_frame
+            target_angles = self.angles[next_frame_start_idx:next_frame_end_idx]
+            self.frame_state_angles = target_angles
+            self.frame_start_time = current_time
+            return target_angles
+
+        step_ratio = (current_time - self.frame_start_time) / next_frame_end_time
+        step_angles = [0] * self.servos
+        for i in range(self.servos):
+            target = self.angles[next_frame_start_idx + i];
+            start = self.frame_state_angles[i]
+            step_angles[i] = (target - start) * step_ratio + start
+
+        print(f'n={next_frame}. t={next_frame_end_time}. r={step_ratio:.1f}.')
+
+        return step_angles
+
+class DadTwist(CatGait):
+
+    def __init__(self, current_time):
+        super().__init__(current_time)
+        self.servos = 12
+        self.fixed_seconds_per_frame = None  # use per-frame timing
+        self.angles = [
+            6,6,6,6,    44,44,-44,-44,   6,6,-6,-6,         0.500,
+            -27,22,-27,22,  32,37,-32,-37,  67, 50, -67, -50,   0.4, #0.639, # Yaw Left
+            6,6,6,6,    44,44,-44,-44,   6,6,-6,-6,         0.4, #0.639,
+            6,6,6,6,    44,44,-44,-44,   6,6,-6,-6,         0.4, #0.639,
+            22,-27,22,-27,  37,32,-37,-32,  50, 67, -50, -67,   0.4, #0.639, # Yaw Right
+            6,6,6,6,    44,44,-44,-44,   6,6,-6,-6,         0.4, #0.639,
+            5,5,9,9,    29,29,-33,-33,  77, 77, 28, 28,     0.740,
+            6,6,6,6,44,44,-44,-44,6,6,-6,-6,0.740,
+            9,9,5,5,33,33,-29,-29,-28,-28,-77,-77,0.740,
+            6,6,6,6,44,44,-44,-44,6,6,-6,-6,0.740,
+            -31,31,31,-31,  31,31,-31,-31,  20, 0,  0,-20, 0.437,
+            6,6,6,6,    44,44,-44,-44,   6, 6, -6, -6, 0.437,
+            31,-31,-31,31,  31,31,-31,-31,   0,20,-20,  0, 0.437,
+            6,6,6,6,    44,44,-44,-44,   6, 6, -6, -6, 0.437,]
 
     def sleepSecs(self):
-        return 0.02
+        return .1
+
+class TestPose(CatGait):
+
+    def __init__(self, current_time):
+        super().__init__(current_time)
+        self.servos = 12
+        self.angles = [35,6,6,6,    44,44,-44,-44,   6, 6, -6, -6,]
+
+
+class DadYawLeft(CatGait):
+
+    def __init__(self, current_time):
+        super().__init__(current_time)
+        self.servos = 12
+        self.angles = [-27,22,-27,22,  32,37,-32,-37,  -3, 67,   3, -67,   0.639,]
+
+class JustRollRight(CatGait):
+
+    def __init__(self, current_time):
+        super().__init__(current_time)
+        self.servos = 12
+        self.angles = [-31,31,31,-31, 44,44,-44,-44, 6,6,-6,-6,]
+
+class DadRollRight(CatGait):
+
+    def __init__(self, current_time):
+        super().__init__(current_time)
+        self.servos = 12
+        self.angles = [-31,31,31,-31,  31,31,-31,-31,  20, 0,  0,-20, 0.437,]
 
 
 class CatBack(CatGait):  # aka BK
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, current_time):
+        super().__init__(current_time)
         self.angles = [
              30, 39,-57,-64,  6, -9, -6,  9,
              28, 49,-58,-56,  7,-11, -7, 11,
@@ -72,16 +170,16 @@ class CatBack(CatGait):  # aka BK
 
 class CatBalance(CatGait):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, current_time):
+        super().__init__(current_time)
         self.angles = [30, 30, -30, -30, 30, 30, -30, -30,]
         # [50, 50,-50,-50, 50, 50,-50,-50,]
 
 
 class CatBound(CatGait):  # aka BD
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, current_time):
+        super().__init__(current_time)
         self.angles = [
              39, 39,-80,-80, 20, 20, 47, 47,
              29, 29,-73,-73, 24, 24, 48, 48,
@@ -117,8 +215,8 @@ class CatBound(CatGait):  # aka BD
 
 class CatCrawl(CatGait):  # aka CR
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, current_time):
+        super().__init__(current_time)
         self.angles = [
              35, 37,-46,-53,-23,-32, -3, 12,
              39, 30,-43,-57,-24,-29, -3, 11,
@@ -158,8 +256,8 @@ class CatCrawl(CatGait):  # aka CR
 
 class CatLY(CatGait):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, current_time):
+        super().__init__(current_time)
         self.angles = [
         114,117,-45,-53, 52, 49,-38,-24,
         114,117,-39,-58, 52, 49,-42,-23,
@@ -185,8 +283,8 @@ class CatLY(CatGait):
 
 class CatMarch(CatGait):  # aka VT
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, current_time):
+        super().__init__(current_time)
         self.angles = [
          51, 39,-57,-43,-18,  7, 19, -7,
          42, 39,-47,-43,  1,  7,  0, -7,
@@ -208,36 +306,14 @@ class CatMarch(CatGait):  # aka VT
 
 class CatOurSit(CatGait):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, current_time):
+        super().__init__(current_time)
         self.angles = [45, 45, -90, -90, 5, 5, 60, 60,]
-
-class DadTwist(CatGait):
-
-    def __init__(self):
-        super().__init__()
-        self.angles = [
-            -6,-6,-6,-6,44,44,-44,-44,6,6,-6,-6,
-            27,-22,27,-22,32,37,-32,-37,-3,67,3,3,
-            -6,-6,-6,-6,44,44,-44,-44,6,6,-6,-6,
-            -22,27,-22,27,37,32,-37,-32,67,-3,-67,-67,
-            -6,-6,-6,-6,44,44,-44,-44,6,6,-6,-6,
-            -5,-5,-9,-9,29,29,-33,-33,77,77,28,28,
-            -6,-6,-6,-6,44,44,-44,-44,6,6,-6,-6,
-            -9,-9,-5,-5,33,33,-29,-29,-28,-28,-77,-77,
-            -6,-6,-6,-6,44,44,-44,-44,6,6,-6,-6,
-            31,-48,-48,31,31,51,-51,-31,30,-8,8,8,
-            -6,-6,-6,-6,44,44,-44,-44,6,6,-6,-6,
-            -48,31,31,-48,51,31,-31,-51,-8,30,-30,-30,
-            -6,-6,-6,-6,44,44,-44,-44,6,6,-6,-6,]
-
-    def sleepSecs(self):
-        return 0.08
 
 class CatPushUp(CatGait):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, current_time):
+        super().__init__(current_time)
         self.angles = [
             20, 20, 60, 60, 60, 60,-55,-55,
             20, 20, 60, 60, 60, 60,-55,-55,
@@ -278,26 +354,26 @@ class CatPushUp(CatGait):
 
 class CatSit(CatGait):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, current_time):
+        super().__init__(current_time)
         self.angles = [30, 30,-90,-90, 60, 60, 45, 45,]
 
 class CatSleep(CatGait):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, current_time):
+        super().__init__(current_time)
         self.angles = [80, 80,-80,-80,-55,-55, 55, 55,]
 
 class CatStretch(CatGait):  # aka str
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, current_time):
+        super().__init__(current_time)
         self.angles = [-60,-60,-15,-15, 60, 60,-45,-45,]
 
 class CatTrot(CatGait):  # aka TR
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, current_time):
+        super().__init__(current_time)
         self.angles = [
          43, 48,-51,-56,  7, -2, -8,  1,
          46, 37,-48,-63,  7,  0, -7, -4,
@@ -339,8 +415,8 @@ class CatTrot(CatGait):  # aka TR
 
 class CatWalk(CatGait):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, current_time):
+        super().__init__(current_time)
         self.angles = [
              12, 59,-55,-49, 23, 24, -2,-12,
              15, 59,-63,-47, 22, 27, -8,-11,
@@ -389,8 +465,8 @@ class CatWalk(CatGait):
 
 class CatWalkLeft(CatGait):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, current_time):
+        super().__init__(current_time)
         self.angles = [
              40, 59,-55,-51,  8, 24, -2, -9,
              41, 59,-63,-50,  8, 27, -8, -9,
@@ -439,8 +515,8 @@ class CatWalkLeft(CatGait):
 
 class CatWalkRight(CatGait):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, current_time):
+        super().__init__(current_time)
         self.angles = [
              12, 55,-53,-49, 23, 12, -5,-12,
              15, 55,-55,-47, 22, 12, -7,-11,
@@ -488,6 +564,6 @@ class CatWalkRight(CatGait):
 
 class CatZero(CatGait):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, current_time):
+        super().__init__(current_time)
         self.angles = [0, 0, 0, 0, 0, 0, 0, 0,]

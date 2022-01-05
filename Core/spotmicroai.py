@@ -44,9 +44,9 @@ class Robot:
         self.reflection=False
         self.state=RobotState.OFF
         # Parameters for Servos - still wrong
-        self.kp = 0.045#0.012
-        self.kd = .4#.2
-        self.maxForce = 12.5
+        self.kp = 1 #0.045#0.012
+        self.kd = 1 # .4#.2
+        self.maxForce = 6 #12.5
 
         self.physId = p.connect(p.SHARED_MEMORY)
         if (self.physId < 0):
@@ -65,7 +65,7 @@ class Robot:
         p.configureDebugVisualizer(p.COV_ENABLE_TINY_RENDERER, 1)
         self.IDkp = p.addUserDebugParameter("Kp", 0, 0.05, self.kp) # 0.05
         self.IDkd = p.addUserDebugParameter("Kd", 0, 1, self.kd) # 0.5
-        self.IDmaxForce = p.addUserDebugParameter("MaxForce", 0, 50, 12.5)
+        self.IDmaxForce = p.addUserDebugParameter("MaxForce", 0, 50, self.maxForce)
 
         p.setRealTimeSimulation(self.useRealTime)
 
@@ -104,11 +104,12 @@ class Robot:
         self.lastLidarTime=0
 
         self.override_angles = None
+        self.last_cat_angles_degrees = [0] * 16
         self.catServo2dogServo = [
             (0, 0), (0, 0), (0, 0), (0, 0),  # hPan, hTilt, tPan, N/A
-            (0, 0), (1, 0), (3, 0), (2, 0),  # FLS, FRS, BRS, BLS
-            (0, 1), (1, 1), (3, 1), (2, 1),  # FLT, FRT, BRT, BLT
-            (0, 2), (1, 2), (3, 2), (2, 2)]  # FLK, FRK, BRK, BLK
+            (0, 0), (1, 0), (3, 0), (2, 0),  # FLR, FRR, HRR, HLR
+            (0, 1), (1, 1), (3, 1), (2, 1),  # FLS, FRS, HRS, HLS
+            (0, 2), (1, 2), (3, 2), (2, 2)]  # FLK, FRK, HRK, HLK
         self.catDir2dogDir = [
             1, 1, 1, 1,
             1, 1, 1, 1,
@@ -283,6 +284,8 @@ class Robot:
         return bodyOrn,linearVel,angularVel
 
     def getAngleInfo(self):
+      if self.override_angles is not None:
+          return self.override_angles
       angles = self.kin.calcIK(self.Lp, self.rot, self.pos)
       output = {}
       for lx, leg in enumerate(['FL', 'FR', 'BL', 'BR']):
@@ -291,12 +294,20 @@ class Robot:
               output[leg][part] = angles[lx][px]*self.dirs[lx][px]*180.0/math.pi
       return output
 
+    def getLastCatAnglesDegrees(self, num_angles):
+        offset = 16 - num_angles
+        if offset < 4:
+            offset = 4  # skip head & tail motors
+        return self.last_cat_angles_degrees[offset:16]
+
     def setCatAnglesDegrees(self, angles):
+        self.last_cat_angles_degrees = [0] * 16
         self.override_angles = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
         offset = 16 - len(angles)
         if offset < 4:
             offset = 4  # skip head & tail motors
         for i in range(offset, 16):
+            self.last_cat_angles_degrees[i] = angles[i-offset]
             (leg, part) = self.catServo2dogServo[i]
             angle = angles[i-offset] * self.catDir2dogDir[i] + self.catOffset2dogOffset[i]
             self.override_angles[leg][part] = angle * math.pi / 180.0

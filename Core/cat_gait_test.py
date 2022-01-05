@@ -30,22 +30,9 @@ kb.start()
 
 robot=spotmicroai.Robot(False, False, reset)
 
-spurWidth=robot.W/2+20
-stepLength=0
-stepHeight=72
-iXf=120
-iXb=-132
-IDspurWidth = p.addUserDebugParameter("spur width", 0, robot.W, spurWidth)
-IDstepHeight = p.addUserDebugParameter("step height", 0, 150, stepHeight)
-
-Lp = np.array([
-    [iXf, -100,  spurWidth, 1],
-    [iXf, -100, -spurWidth, 1],
-    [-50, -100,  spurWidth, 1],
-    [-50, -100, -spurWidth, 1]])
 
 elapsed_time = time.time() - rtime
-catGait = catGaits.CatWalk(elapsed_time)
+catGait = catGaits.CatBack(elapsed_time)
 
 # time.sleep(5)   # helpful when recording the screen
 
@@ -54,16 +41,12 @@ initial_wait_secs = 3   # TODO(dwind): Why is this wait needed? Do we need to ca
 while True:
     elapsed_time = time.time() - rtime
 
-    catAngles = robot.getLastCatAnglesDegrees(catGait.getNumServos())
-    # TODO(dwind): This will re-apply initial_wait_secs on every reset.
-    if elapsed_time < initial_wait_secs: # wait 3 seconds to start
-        catGait.adjustStartTime(elapsed_time)
-    else:
-        catAngles = catGait.getAngles(elapsed_time, catAngles)
-    robot.setCatAnglesDegrees(catAngles)
-    robot.step()
+    prevAngles = robot.getLastCatAnglesDegrees(catGait.getNumServos())
+    curAngles = catGait.getAngles(elapsed_time, prevAngles)
 
-    time.sleep(0.001)  # TODO(dwind): Fix at 0.02? 0.1?
+    print(f't={elapsed_time:.3f}. p={prevAngles}. c={curAngles}.')
+
+    time.sleep(0.005)  # TODO(dwind): Fix at 0.02? 0.1?
 
     key_pressed = kb.read()
     #print(f'Read key={key_pressed}.')
@@ -107,15 +90,7 @@ while True:
         catGait = catGaits.CatWalk(elapsed_time)
     elif key_pressed == 'x':
         catGait = catGaits.CatBack(elapsed_time)
-    elif key_pressed == 'y':
-        catGait = catGaits.DadYawLeft(elapsed_time)
     elif key_pressed == 'z':
         catGait = catGaits.CatZero(elapsed_time)
     elif key_pressed == '?':
         catGait = catGaits.DadTwist(elapsed_time)
-    elif key_pressed == '[':
-        catGait = catGaits.DadRollRight(elapsed_time)
-    elif key_pressed == '-':
-        catGait = catGaits.JustRollRight(elapsed_time)
-    elif key_pressed == '\\':
-        catGait = catGaits.TestPose(elapsed_time)
