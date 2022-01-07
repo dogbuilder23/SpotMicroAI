@@ -77,7 +77,7 @@ while True:
         catGait = catGaits.CatWalkRight(elapsed_time)
     elif key_pressed == 'e':
         angle = robot.getCameraAngle()
-        robot.setCameraAngle(angle - 10)
+        robot.setCameraAngle(angle + 10)
     elif key_pressed == 'f':
         robot.fixForceAndGains()
     elif key_pressed == 'h':
@@ -92,7 +92,7 @@ while True:
         catGait = catGaits.CatPushUp(elapsed_time)
     elif key_pressed == 'q':
         angle = robot.getCameraAngle()
-        robot.setCameraAngle(angle + 10)
+        robot.setCameraAngle(angle - 10)
     elif key_pressed == 'r':
         robot.resetBody() # Sets rtime, see reset() above.
         elapsed_time = time.time() - rtime

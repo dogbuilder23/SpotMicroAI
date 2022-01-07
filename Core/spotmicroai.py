@@ -46,7 +46,7 @@ class Robot:
         # Parameters for Servos - still wrong
         self.kp = 1 #0.045#0.012
         self.kd = 1 # .4#.2
-        self.maxForce = 5 #12.5
+        self.maxForce = 4 #12.5
 
         self.physId = p.connect(p.SHARED_MEMORY)
         if (self.physId < 0):
