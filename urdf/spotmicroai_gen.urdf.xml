@@ -13,6 +13,9 @@
   <material name="grey">
     <color rgba="0.6 0.6 0.6 1"/>
   </material>
+  <material name="purple">
+    <color rgba="0.5 0.5 1 1"/>
+  </material>
   <!-- Params -->
   <!-- Macros -->
   <!-- Robot Body -->
@@ -31,10 +34,36 @@
       <origin rpy="0 0 0" xyz="0 0 0"/>
     </collision>
     <inertial>
-      <mass value="2.80"/>
-      <inertia ixx="100" ixy="0" ixz="0" iyy="100" iyz="0" izz="100"/>
+      <mass value="0.6"/>
+      <inertia ixx="0.0025" ixy="0" ixz="0" iyx="0" iyy="0.0011498" iyz="0" izx="0" izy="0" izz="0.0026498"/>
     </inertial>
   </link>
+  <link name="battery">
+      <visual>
+        <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
+        <geometry>
+          <box size="0.048 0.145 0.026"/>
+        </geometry>
+        <material name="purple"/>
+      </visual>
+      <collision>
+        <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
+        <geometry>
+          <box size="0.048 0.145 0.026"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.4"/>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <!-- Inertial Axes -->
+        <inertia ixx="0.000723366666667" ixy="0" ixz="0" iyx="0" iyy="9.93333333333e-05" iyz="0" izx="0" izy="0" izz="0.000777633333333"/>
+      </inertial>
+  </link>
+  <joint name="base_battery" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.01 0 -0.0225"/>
+    <parent link="base_link"/>
+    <child link="battery"/>
+  </joint>
   <link name="rear_link">
     <visual>
       <geometry>
@@ -87,7 +116,7 @@
       <geometry>
         <mesh filename="../Parts/lshoulder.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="-0.1295 -0.02 -0.01"/> 
+      <origin rpy="0 0 0" xyz="-0.1295 -0.02 -0.01"/>
       <material name="black"/>
     </visual>
     <collision>
@@ -583,4 +612,3 @@
     <origin xyz="0 0 -0.115"/>
   </joint>
 </robot>
-
