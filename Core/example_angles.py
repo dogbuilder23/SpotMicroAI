@@ -119,3 +119,5 @@ while True:
         catGait = catGaits.JustRollRight(elapsed_time)
     elif key_pressed == '\\':
         catGait = catGaits.TestPose(elapsed_time)
+    elif key_pressed == '.':
+        robot.toggleCameraPause()

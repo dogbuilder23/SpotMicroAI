@@ -27,9 +27,12 @@ class Robot:
         self.resetFunc=resetFunc
         self.useRealTime = True
         self.debugLidar=False
-        self.trackCamera=True
+
         self.camera_angle = 0
+        self.pauseCamera=False
         self.rotateCamera=False
+        self.trackCamera=True
+
         self.debug=False
         self.fixedGains = False
         self.fixedTimeStep = 1. / 550
@@ -156,7 +159,7 @@ class Robot:
         orn = p.getQuaternionFromEuler([math.pi/30*0, 0*math.pi/50, 0])
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         planeUid = p.loadURDF("plane_transparent.urdf", [0, 0, 0], orn)
-        p.changeDynamics(planeUid, -1, lateralFriction=1)
+        p.changeDynamics(planeUid, -1, lateralFriction=100) # dwind This had a huge effect >2,
         texUid = p.loadTexture("concrete.png")
         p.changeVisualShape(planeUid, -1, textureUniqueId=texUid)
         if self.useStairs:
@@ -168,7 +171,7 @@ class Robot:
                             useMaximalCoordinates=self.useMaximalCoordinates,
                             flags=flags) #p.URDF_USE_IMPLICIT_CYLINDER)
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
-        p.changeDynamics(quadruped, -1, lateralFriction=0.8)
+        p.changeDynamics(quadruped, -1, lateralFriction=1)  # E.g. https://github.com/OpenQuadruped/spot_mini_mini/blob/spot/spotmicro/spot.py
 
         return quadruped
 
@@ -328,6 +331,9 @@ class Robot:
         self.fixedGains = True
         print('Using fixed maxForce & Gains.')
 
+    def toggleCameraPause(self):
+        self.pauseCamera = not self.pauseCamera
+
     def step(self):
 
         if (self.useRealTime):
@@ -352,10 +358,11 @@ class Robot:
 
         #if self.checkSimulationReset(bodyOrn):
         #    return False
-        if self.rotateCamera:
-            p.resetDebugVisualizerCamera(0.7,self.t*10,-5,bodyPos)
-        elif self.trackCamera:
-            p.resetDebugVisualizerCamera(0.7, self.camera_angle, -5, bodyPos)
+        if not self.pauseCamera:
+            if self.rotateCamera:
+                p.resetDebugVisualizerCamera(0.7,self.t*10,-5,bodyPos)
+            elif self.trackCamera:
+                p.resetDebugVisualizerCamera(0.7, self.camera_angle, -5, bodyPos)
         # Calculate Angles with the input of FeetPos,BodyRotation and BodyPosition
         if self.override_angles:
             angles = self.override_angles
