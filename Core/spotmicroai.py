@@ -159,7 +159,7 @@ class Robot:
         orn = p.getQuaternionFromEuler([math.pi/30*0, 0*math.pi/50, 0])
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         planeUid = p.loadURDF("plane_transparent.urdf", [0, 0, 0], orn)
-        p.changeDynamics(planeUid, -1, lateralFriction=100) # dwind This had a huge effect >2,
+        p.changeDynamics(planeUid, -1, lateralFriction=100) # dwind: friction had a huge effect >2.
         texUid = p.loadTexture("concrete.png")
         p.changeVisualShape(planeUid, -1, textureUniqueId=texUid)
         if self.useStairs:
