@@ -1,5 +1,5 @@
 """
-Simulation of SpotMicroAI and it's Kinematics 
+Simulation of SpotMicroAI and it's Kinematics
 Use a Gamepad to see how it works
 """
 import pybullet as p
@@ -74,8 +74,8 @@ while True:
     joy_y = p.readUserDebugParameter(IDy)
     joy_z = p.readUserDebugParameter(IDz)
     joy_rz = p.readUserDebugParameter(IDrz)
-        
-    # map the Gamepad Inputs to Pose-Values. Still very hardcoded ranges. 
+
+    # map the Gamepad Inputs to Pose-Values. Still very hardcoded ranges.
     # TODO: Make ranges depend on height or smth to keep them valid all the time
     robot.bodyRotation((math.pi/180*roll,1/256*joy_x-0.5,-(0.9/256*joy_y-0.45)))
     robot.bodyPosition((100/256*-joy_rz-20+120, 40+height, 60/256*joy_z-30))

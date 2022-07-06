@@ -35,18 +35,22 @@ class CatGait:
             next_frame_end_idx = next_frame_end_idx - 1
             next_frame_end_time = self.angles[next_frame_end_idx]
 
-        print(f's={self.frame_start_time:.3f}. sa={self.frame_start_angles}. n={next_frame}. t={next_frame_end_time}.')
+        print(f'''
+            s={self.frame_start_time:.3f}.
+            sa={self.frame_start_angles}.
+            n={next_frame}.
+            t={next_frame_end_time}.''')
 
         # Cache the starting angles, if we're transitioning into new gait.
         if self.first_step:
-            self.frame_state_angles = current_angles
+            self.frame_start_angles = current_angles
             self.first_step = False
 
         # If we're at or past the deadline, move to the target angles now.
         if current_time >= next_frame_end_time + self.frame_start_time:
             self.frame = next_frame
             target_angles = self.angles[next_frame_start_idx:next_frame_end_idx]
-            self.frame_state_angles = target_angles
+            self.frame_start_angles = target_angles
             self.frame_start_time = current_time
             return target_angles
 
@@ -54,7 +58,7 @@ class CatGait:
         step_angles = [0] * self.servos
         for i in range(self.servos):
             target = self.angles[next_frame_start_idx + i];
-            start = self.frame_state_angles[i]
+            start = self.frame_start_angles[i]
             step_angles[i] = (target - start) * step_ratio + start
 
         print(f'n={next_frame}. t={next_frame_end_time}. r={step_ratio:.1f}.')
