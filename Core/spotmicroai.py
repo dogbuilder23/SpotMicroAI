@@ -83,6 +83,9 @@ class Robot:
         self.dirs = [[-1, 1, 1], [1, 1, 1], [-1, 1, 1], [1, 1, 1]]
         self.roll=0
 
+        self.camera_height = 0.4
+        self.camera_distance = 0.7
+
         # Foot position array.
         # TODO(dwind): Understand why x-coords diff from front to back.
         self.Lp = np.array([
@@ -123,6 +126,18 @@ class Robot:
             0, 0, 0, 0,
             0, 0, 0, 0,
             90, 90, 90, 90]
+
+    def getCameraHeight(self):
+        return self.camera_height
+
+    def setCameraHeight(self, height):
+        self.camera_height = height
+
+    def getCameraDistance(self):
+        return self.camera_distance
+
+    def setCameraDistance(self, d):
+        self.camera_distance = d
 
     def createEnv(self):
         if not self.useBlocks:
@@ -358,11 +373,14 @@ class Robot:
 
         #if self.checkSimulationReset(bodyOrn):
         #    return False
+        cameraPos = list(bodyPos)
+        cameraPos[2] = self.camera_height
+
         if not self.pauseCamera:
             if self.rotateCamera:
-                p.resetDebugVisualizerCamera(0.7,self.t*10,-5,bodyPos)
+                p.resetDebugVisualizerCamera(self.camera_distance, self.t*10, -5, cameraPos)
             elif self.trackCamera:
-                p.resetDebugVisualizerCamera(0.7, self.camera_angle, -5, bodyPos)
+                p.resetDebugVisualizerCamera(self.camera_distance, self.camera_angle, -5, cameraPos)
         # Calculate Angles with the input of FeetPos,BodyRotation and BodyPosition
         if self.override_angles:
             angles = self.override_angles

@@ -61,7 +61,9 @@ catGait = catGaits.CatWalk(elapsed_time)
 
 initial_wait_secs = 3   # TODO(dwind): Why is this wait needed? Do we need to call robot.step() or just sleep?
 
+previous_key = ''
 last_camera_mod_time = 0
+camera_keys = ['k','l', 'o', ';', ',', '.', '/']
 
 while True:
     elapsed_time = time.time() - rtime
@@ -84,6 +86,9 @@ while True:
         key_pressed = chr(returnedKeys[0])
         #print(f'Read key={key_pressed}.')
 
+        if key_pressed == previous_key and key_pressed not in camera_keys:
+            continue
+
         if key_pressed == 'a':
             catGait = catGaits.CatWalkLeft(elapsed_time)
         elif key_pressed == 'b':
@@ -92,26 +97,38 @@ while True:
             catGait = catGaits.CatCrawl(elapsed_time)
         elif key_pressed == 'd':
             catGait = catGaits.CatWalkRight(elapsed_time)
-        elif key_pressed == 'e' and elapsed_time > last_camera_mod_time + 0.1:
-            angle = robot.getCameraAngle()
-            robot.setCameraAngle(angle + 10)
-            last_camera_mod_time = elapsed_time
         elif key_pressed == 'f':
             robot.fixForceAndGains()
         elif key_pressed == 'h':
             catGait = catGaits.CatStretch(elapsed_time)
+        elif key_pressed == 'o' and elapsed_time > last_camera_mod_time + 0.1:
+            # Pan camera up.
+            h = robot.getCameraHeight()
+            robot.setCameraHeight(h + 0.01)
+            last_camera_mod_time = elapsed_time
+        elif key_pressed == 'k' and elapsed_time > last_camera_mod_time + 0.1:
+            # Pan camera left.
+            angle = robot.getCameraAngle()
+            robot.setCameraAngle(angle - 10)
+            last_camera_mod_time = elapsed_time
+        elif key_pressed == 'l' and elapsed_time > last_camera_mod_time + 0.1:
+            # Pan camera down.
+            h = robot.getCameraHeight()
+            robot.setCameraHeight(h - 0.01)
+            last_camera_mod_time = elapsed_time
+        elif key_pressed == ';' and elapsed_time > last_camera_mod_time + 0.1:
+            # Pan camera right.
+            angle = robot.getCameraAngle()
+            robot.setCameraAngle(angle + 10)
+            last_camera_mod_time = elapsed_time
         elif key_pressed == 'm':
             catGait = catGaits.CatMarch(elapsed_time)
         elif key_pressed == 'n':
             catGait = catGaits.CatSleep(elapsed_time)
-        elif key_pressed == 'o':
+        elif key_pressed == 'u':
             catGait = catGaits.CatOurSit(elapsed_time)
         elif key_pressed == 'p':
             catGait = catGaits.CatPushUp(elapsed_time)
-        elif key_pressed == 'q' and elapsed_time > last_camera_mod_time + 0.1:
-            angle = robot.getCameraAngle()
-            robot.setCameraAngle(angle - 10)
-            last_camera_mod_time = elapsed_time
         elif key_pressed == 'r':
             robot.resetBody() # Sets rtime, see reset() above.
             elapsed_time = time.time() - rtime
@@ -130,7 +147,7 @@ while True:
             catGait = catGaits.DadYawLeft(elapsed_time)
         elif key_pressed == 'z':
             catGait = catGaits.CatZero(elapsed_time)
-        elif key_pressed == '?':
+        elif key_pressed == ']':
             catGait = catGaits.DadTwist(elapsed_time)
         elif key_pressed == '[':
             catGait = catGaits.DadRollRight(elapsed_time)
@@ -138,8 +155,21 @@ while True:
             catGait = catGaits.JustRollRight(elapsed_time)
         elif key_pressed == '\\':
             catGait = catGaits.TestPose(elapsed_time)
-        elif key_pressed == '.':
+        elif key_pressed == '.' and elapsed_time > last_camera_mod_time + 0.5:
             robot.toggleCameraPause()
+            last_camera_mod_time = elapsed_time
+        elif key_pressed == ',' and elapsed_time > last_camera_mod_time + 0.1:
+            # Move camera farther away.
+            d = robot.getCameraDistance()
+            robot.setCameraDistance(d + 0.1)
+            last_camera_mod_time = elapsed_time
+        elif key_pressed == '/' and elapsed_time > last_camera_mod_time + 0.1:
+            # Move camera closer.
+            d = robot.getCameraDistance()
+            robot.setCameraDistance(d - 0.1)
+            last_camera_mod_time = elapsed_time
 
     except IndexError:
         continue
+
+    previous_key = key_pressed
