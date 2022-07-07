@@ -20,7 +20,7 @@ class CatGait:
     def adjustStartTime(self, current_time):
         self.frame_start_time = current_time
 
-    def getAngles(self, current_time, current_angles):
+    def getAngles(self, current_time, current_angles, verbose=False):
         values_per_frame = self.servos
         if self.fixed_seconds_per_frame is None:
             values_per_frame = values_per_frame + 1  # +1 for per-frame time
@@ -35,11 +35,12 @@ class CatGait:
             next_frame_end_idx = next_frame_end_idx - 1
             next_frame_end_time = self.angles[next_frame_end_idx]
 
-        print(f'''
-            s={self.frame_start_time:.3f}.
-            sa={self.frame_start_angles}.
-            n={next_frame}.
-            t={next_frame_end_time}.''')
+        if verbose:
+            print((
+                f's={self.frame_start_time:.3f}. '
+                f'sa={self.frame_start_angles}. '
+                f'n={next_frame}. '
+                f't={next_frame_end_time}.'))
 
         # Cache the starting angles, if we're transitioning into new gait.
         if self.first_step:
@@ -61,7 +62,8 @@ class CatGait:
             start = self.frame_start_angles[i]
             step_angles[i] = (target - start) * step_ratio + start
 
-        print(f'n={next_frame}. t={next_frame_end_time}. r={step_ratio:.1f}.')
+        if verbose:
+            print(f'n={next_frame}. t={next_frame_end_time}. r={step_ratio:.1f}.')
 
         return step_angles
 

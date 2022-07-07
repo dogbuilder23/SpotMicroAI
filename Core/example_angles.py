@@ -61,6 +61,8 @@ catGait = catGaits.CatWalk(elapsed_time)
 
 initial_wait_secs = 3   # TODO(dwind): Why is this wait needed? Do we need to call robot.step() or just sleep?
 
+last_camera_mod_time = 0
+
 while True:
     elapsed_time = time.time() - rtime
 
@@ -80,7 +82,7 @@ while True:
         #(awind) call get_keys to get a array of returned unicode ints and call chr() on first return.
         returnedKeys = get_key_pressed()
         key_pressed = chr(returnedKeys[0])
-        print(f'Read key={key_pressed}.')
+        #print(f'Read key={key_pressed}.')
 
         if key_pressed == 'a':
             catGait = catGaits.CatWalkLeft(elapsed_time)
@@ -90,9 +92,10 @@ while True:
             catGait = catGaits.CatCrawl(elapsed_time)
         elif key_pressed == 'd':
             catGait = catGaits.CatWalkRight(elapsed_time)
-        elif key_pressed == 'e':
+        elif key_pressed == 'e' and elapsed_time > last_camera_mod_time + 0.1:
             angle = robot.getCameraAngle()
             robot.setCameraAngle(angle + 10)
+            last_camera_mod_time = elapsed_time
         elif key_pressed == 'f':
             robot.fixForceAndGains()
         elif key_pressed == 'h':
@@ -105,9 +108,10 @@ while True:
             catGait = catGaits.CatOurSit(elapsed_time)
         elif key_pressed == 'p':
             catGait = catGaits.CatPushUp(elapsed_time)
-        elif key_pressed == 'q':
+        elif key_pressed == 'q' and elapsed_time > last_camera_mod_time + 0.1:
             angle = robot.getCameraAngle()
             robot.setCameraAngle(angle - 10)
+            last_camera_mod_time = elapsed_time
         elif key_pressed == 'r':
             robot.resetBody() # Sets rtime, see reset() above.
             elapsed_time = time.time() - rtime
