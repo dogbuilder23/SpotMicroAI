@@ -40,7 +40,7 @@
   </link>
   <link name="battery">
       <visual>
-        <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
+        <origin rpy="0 0 1.57079632679" xyz="0 -0.005 0"/>
         <geometry>
           <box size="0.048 0.145 0.026"/>
         </geometry>
@@ -67,9 +67,9 @@
   <link name="rear_link">
     <visual>
       <geometry>
-        <mesh filename="../Parts/backpart.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="../Parts/dwind-rear_cover.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="-0.0025 -0.060 -0.0140"/>
+      <origin rpy="0 0 0" xyz="0.03 -0.11 -0.042"/>
       <material name="yellow"/>
     </visual>
     <collision>
@@ -90,9 +90,9 @@
   <link name="front_link">
     <visual>
       <geometry>
-        <mesh filename="../Parts/frontpart.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="../Parts/dwind-front_cover.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="-0.0775 -0.060 -0.0140"/>
+      <origin rpy="0 0 0" xyz="-0.28 -0.11 -0.042"/>
       <material name="yellow"/>
     </visual>
     <collision>
@@ -109,6 +109,32 @@
   <joint name="base_front" type="fixed">
     <parent link="base_link"/>
     <child link="front_link"/>
+  </joint>
+  <link name="top_cover_link">
+    <visual>
+      <geometry>
+        <mesh filename="../Parts/dwind-top_cover.stl" scale="0.00154 0.001 0.001"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="-0.188 -0.11 -0.005"/>
+      <material name="yellow"/>
+    </visual>
+  </link>
+  <joint name="top_cover_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="top_cover_link"/>
+  </joint>
+  <link name="bottom_cover_link">
+    <visual>
+      <geometry>
+        <mesh filename="../Parts/dwind-bottom_cover.stl" scale="0.00154 0.001 0.001"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="-0.188 -0.11 -0.044"/>
+      <material name="yellow"/>
+    </visual>
+  </link>
+  <joint name="bottom_cover_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="bottom_cover_link"/>
   </joint>
   <!-- create Legs -->
   <link name="front_left_shoulder_link">
